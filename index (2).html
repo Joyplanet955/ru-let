@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>黄金のルーレット — 豪華限定ガチャ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Cinzel:wght@400;700;900&family=Noto+Sans+JP:wght@400;600&family=Noto+Serif+JP:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F0D080;
+    --gold-pale: #E8C97A;
+    --gold-dark: #8B6914;
+    --black: #080808;
+    --black-deep: #030303;
+    --surface: #0F0E0C;
+    --surface-2: #1A1814;
+    --glass: rgba(201,168,76,0.06);
+    --glass-border: rgba(201,168,76,0.18);
+    --text-muted: rgba(201,168,76,0.45);
+    --shadow-gold: 0 0 40px rgba(201,168,76,0.18);
+    --radius: 16px;
+  }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+/* Googleサイト埋め込み時の余白対策として強制リセット */
+width: 100vw; min-height: 100vh;
+margin: 0 !important; padding: 0 !important;
+background: var(--black-deep);
+color: var(--gold-pale);
+font-family: 'Rajdhani', 'Noto Sans JP', sans-serif;
+overflow-x: hidden;
+-webkit-font-smoothing: antialiased;
+}
+
+body::before {
+content: '';
+position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+opacity: 0.55;
+}
+
+.ambient {
+position: fixed; inset: 0; z-index: 0; overflow: hidden;
+pointer-events: none;
+}
+.ambient::before {
+content: '';
+position: absolute;
+width: 700px; height: 700px;
+top: -200px; left: 50%; transform: translateX(-50%);
+background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+animation: pulse-ambient 8s ease-in-out infinite;
+}
+@keyframes pulse-ambient {
+0%,100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+}
+
+.app {
+position: relative; z-index: 1;
+min-height: 100vh;
+display: flex; flex-direction: column; align-items: center;
+padding: 0 16px 60px;
+}
+
+/* ── Header ── */
+.header {
+width: 100%; max-width: 900px;
+text-align: center;
+padding: 40px 0 20px;
+}
+.header::after {
+content: '';
+display: block; width: 160px; height: 1px;
+margin: 18px auto 0;
+background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.logo-eyebrow {
+font-size: 12px; letter-spacing: 4px; font-weight: 600;
+color: var(--gold-dark);
+margin-bottom: 10px;
+font-family: 'Noto Serif JP', serif;
+}
+.logo-title {
+font-family: 'Cinzel', 'Noto Serif JP', serif;
+font-size: clamp(28px, 6vw, 56px);
+font-weight: 900;
+letter-spacing: 4px;
+background: linear-gradient(160deg, #F0D080 0%, #C9A84C 40%, #8B6914 75%, #C9A84C 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+line-height: 1.2;
+filter: drop-shadow(0 0 20px rgba(201,168,76,0.35));
+}
+.logo-sub {
+font-family: 'Cormorant Garamond', 'Noto Serif JP', serif;
+font-size: clamp(13px, 2vw, 16px);
+color: var(--text-muted);
+letter-spacing: 2px;
+margin-top: 8px;
+}
+
+/* ── Stats ── */
+.stats-bar {
+display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+margin: 14px auto 0; max-width: 700px;
+}
+.stat-chip {
+background: var(--glass);
+border: 1px solid var(--glass-border);
+border-radius: 100px;
+padding: 6px 18px;
+font-size: 11px; letter-spacing: 1px; font-weight: 600;
+color: var(--text-muted);
+backdrop-filter: blur(12px);
+transition: border-color 0.3s, color 0.3s;
+}
+.stat-chip span { color: var(--gold-light); margin-left: 4px;}
+.stat-chip.active { border-color: var(--gold); color: var(--gold-light); }
+
+/* ── Stage ── */
+.stage {
+position: relative;
+width: 100%; max-width: 760px;
+margin: 24px auto 0;
+border-radius: var(--radius);
+overflow: hidden;
+background: var(--surface);
+box-shadow: 0 0 80px rgba(0,0,0,0.8), var(--shadow-gold);
+border: 1px solid var(--glass-border);
+aspect-ratio: 16/9;
+}
+.stage video {
+width: 100%; height: 100%; object-fit: cover;
+display: block;
+border-radius: var(--radius);
+}
+
+/* ── CSS Fallback Wheel ── */
+.css-fallback {
+display: none;
+position: absolute; inset: 0;
+align-items: center; justify-content: center;
+background: radial-gradient(ellipse at center, #1a1510 0%, #080808 80%);
+flex-direction: column;
+gap: 16px;
+}
+.css-fallback.active { display: flex; }
+
+.wheel-wrap {
+position: relative;
+width: min(260px, 46vw);
+height: min(260px, 46vw);
+}
+.wheel-svg { width: 100%; height: 100%; filter: drop-shadow(0 0 24px rgba(201,168,76,0.4)); }
+.wheel-svg.spinning { animation: wheel-spin 3.2s cubic-bezier(0.15,0.9,0.4,1) forwards; }
+@keyframes wheel-spin {
+0%   { transform: rotate(0deg); }
+30%  { transform: rotate(720deg); }
+70%  { transform: rotate(1260deg); }
+100% { transform: rotate(1620deg); }
+}
+.wheel-pointer {
+position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+width: 0; height: 0;
+border-left: 10px solid transparent;
+border-right: 10px solid transparent;
+border-top: 22px solid var(--gold);
+filter: drop-shadow(0 0 8px var(--gold));
+}
+.ball {
+position: absolute;
+width: 12px; height: 12px;
+background: radial-gradient(circle at 35% 35%, #fff 0%, #ccc 60%, #999 100%);
+border-radius: 50%;
+box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 5px rgba(255,255,255,0.4);
+top: 50%; left: 50%;
+transform: translate(-50%, -50%) translateY(-115px);
+transform-origin: center center;
+}
+.ball.rolling { animation: ball-roll 3.2s cubic-bezier(0.15,0.9,0.4,1) forwards; }
+@keyframes ball-roll {
+0%   { transform: translate(-50%,-50%) rotate(0deg) translateY(-115px); }
+80%  { transform: translate(-50%,-50%) rotate(1440deg) translateY(-70px); }
+100% { transform: translate(-50%,-50%) rotate(1620deg) translateY(-85px); }
+}
+.fallback-label {
+font-size: 11px; letter-spacing: 2px;
+color: var(--text-muted);
+font-weight: 600;
+}
+
+.stage-overlay {
+position: absolute; inset: 0;
+background: linear-gradient(180deg, rgba(8,8,8,0.05) 0%, transparent 30%, transparent 60%, rgba(8,8,8,0.55) 100%);
+pointer-events: none; border-radius: var(--radius);
+}
+
+.video-badge {
+position: absolute; bottom: 14px; left: 18px;
+font-size: 10px; letter-spacing: 1px;
+color: rgba(201,168,76,0.4);
+font-weight: 600;
+display: flex; align-items: center; gap: 6px;
+}
+.video-badge .dot {
+width: 5px; height: 5px; border-radius: 50%;
+background: rgba(201,168,76,0.4);
+animation: blink-dot 2s ease-in-out infinite;
+}
+.video-badge.live .dot { background: #4CAF50; animation: none; }
+@keyframes blink-dot { 0%,100%{opacity:1}50%{opacity:0.2} }
+
+.pulse-ring {
+position: absolute; inset: -4px;
+border-radius: calc(var(--radius) + 4px);
+border: 2px solid var(--gold);
+opacity: 0; pointer-events: none;
+}
+.pulse-ring.firing { animation: ring-pulse 1.5s ease-out forwards; }
+@keyframes ring-pulse { 0%{opacity:0.9;transform:scale(1)}100%{opacity:0;transform:scale(1.06)} }
+
+/* ── Controls ── */
+.controls {
+margin: 28px auto 0; max-width: 760px; width: 100%;
+display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+
+.spin-btn {
+position: relative;
+width: clamp(220px, 55%, 340px); height: 62px;
+border: none; cursor: pointer; border-radius: 100px;
+font-family: 'Noto Serif JP', serif;
+font-size: 16px; font-weight: 700; letter-spacing: 3px;
+color: var(--black-deep);
+background: linear-gradient(135deg, #F0D080 0%, #C9A84C 40%, #A07828 60%, #C9A84C 80%, #F0D080 100%);
+box-shadow: 0 0 0 1px rgba(201,168,76,0.5), 0 4px 24px rgba(201,168,76,0.35), 0 12px 48px rgba(0,0,0,0.5);
+transition: transform 0.15s ease, box-shadow 0.3s ease, opacity 0.3s;
+overflow: hidden;
+}
+.spin-btn::before {
+content: '';
+position: absolute; inset: 0; border-radius: 100px;
+background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 50%);
+opacity: 0; transition: opacity 0.3s;
+}
+.spin-btn:hover:not(:disabled)::before { opacity: 1; }
+.spin-btn:hover:not(:disabled) {
+transform: translateY(-2px);
+box-shadow: 0 0 0 1px rgba(201,168,76,0.7), 0 8px 32px rgba(201,168,76,0.55), 0 20px 60px rgba(0,0,0,0.5);
+}
+.spin-btn:active:not(:disabled) { transform: translateY(1px); }
+.spin-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.spin-btn .shimmer {
+position: absolute; inset: 0; border-radius: 100px;
+background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.35) 50%, transparent 80%);
+transform: translateX(-100%);
+animation: shimmer-idle 3.5s ease infinite;
+}
+@keyframes shimmer-idle {
+0%,60%  { transform: translateX(-100%); }
+80%,100%{ transform: translateX(100%); }
+}
+.spin-btn:disabled .shimmer { animation: none; }
+
+.spin-btn .btn-text { position: relative; z-index: 1; }
+
+.audio-hint {
+font-size: 11px; letter-spacing: 1px; color: var(--text-muted);
+opacity: 0; transition: opacity 0.5s;
+font-weight: 400; text-align: center;
+}
+.audio-hint.visible { opacity: 1; }
+
+/* ── Prize Grid ── */
+.prize-section {
+width: 100%; max-width: 760px;
+margin: 32px auto 0;
+}
+.section-label {
+font-family: 'Noto Serif JP', serif;
+font-size: 12px; letter-spacing: 3px;
+color: var(--text-muted);
+text-align: center; margin-bottom: 16px;
+}
+.section-label::before, .section-label::after { content: ' ◆ '; font-size:9px; opacity:0.5; }
+
+.prize-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+gap: 10px;
+}
+
+.prize-card {
+position: relative;
+background: var(--glass);
+border: 1px solid var(--glass-border);
+border-radius: 12px;
+padding: 16px 14px;
+backdrop-filter: blur(16px);
+transition: transform 0.25s ease, border-color 0.3s, box-shadow 0.3s;
+overflow: hidden;
+}
+.prize-card::before {
+content: '';
+position: absolute; top: 0; left: 0; right: 0; height: 1px;
+background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+}
+.prize-card:hover { transform: translateY(-3px); border-color: rgba(201,168,76,0.35); box-shadow: var(--shadow-gold); }
+.prize-card.depleted { opacity: 0.3; pointer-events: none; }
+.prize-card .p-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+.prize-card .p-name {
+font-family: 'Noto Serif JP', serif; font-size: 12px; font-weight: 700;
+color: var(--gold-light); letter-spacing: 1px; margin-bottom: 4px;
+}
+.prize-card .p-value { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 10px; }
+.prize-card .bar-wrap { height: 3px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+.prize-card .bar { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius:100px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+.prize-card .p-stock { font-size: 10px; letter-spacing: 1px; color: var(--text-muted); margin-top: 6px; font-weight: 600; }
+.rarity-badge {
+position: absolute; top: 10px; right: 10px;
+font-size: 9px; letter-spacing: 1px; font-weight: 700;
+padding: 2px 7px; border-radius: 100px;
+}
+
+/* ── 日本向けレアリティクラス ── */
+.r-N   { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.35); }
+.r-R   { background: rgba(41,128,185,0.15); color: #5DADE2; border: 1px solid rgba(93,173,226,0.3); }
+.r-SR  { background: rgba(142,68,173,0.15); color: #C39BD3; border: 1px solid rgba(195,155,211,0.3); }
+.r-SSR { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.35); }
+
+/* ── Modal ── */
+.modal-backdrop {
+position: fixed; inset: 0; z-index: 500;
+background: rgba(0,0,0,0.88);
+backdrop-filter: blur(20px) saturate(0.3);
+display: flex; align-items: center; justify-content: center;
+opacity: 0; pointer-events: none;
+transition: opacity 0.5s ease;
+padding: 20px;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+.modal {
+position: relative;
+width: 100%; max-width: 480px;
+background: linear-gradient(145deg, #1A1814 0%, #0F0E0C 50%, #151310 100%);
+border: 1px solid var(--glass-border);
+border-radius: 24px;
+padding: 52px 40px 40px;
+text-align: center;
+overflow: hidden;
+transform: scale(0.88) translateY(20px);
+transition: transform 0.5s cubic-bezier(0.34,1.4,0.64,1);
+box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,168,76,0.12), var(--shadow-gold);
+}
+.modal-backdrop.open .modal { transform: scale(1) translateY(0); }
+.modal::before {
+content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.modal::after {
+content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+width: 300px; height: 200px;
+background: radial-gradient(ellipse at center, rgba(201,168,76,0.12) 0%, transparent 70%);
+pointer-events: none;
+}
+
+.m-eyebrow { font-size: 11px; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 12px; }
+.m-icon {
+font-size: 56px; margin-bottom: 16px; display: block;
+animation: icon-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+animation-delay: 0.15s;
+}
+@keyframes icon-pop { from{transform:scale(0) rotate(-20deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
+.m-name {
+font-family: 'Noto Serif JP', serif; font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 2px;
+background: linear-gradient(160deg, #F0D080 0%, #C9A84C 50%, #A07828 100%);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+margin-bottom: 8px; line-height: 1.3;
+}
+.m-value {
+font-family: 'Noto Serif JP', serif; font-size: 15px;
+color: var(--text-muted); margin-bottom: 20px; letter-spacing: 1px;
+}
+.m-rarity {
+display: inline-block; font-size: 10px; letter-spacing: 2px;
+font-weight: 700;
+padding: 4px 14px; border-radius: 100px; margin-bottom: 24px;
+}
+.m-divider { height: 1px; margin: 0 0 24px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); }
+.m-msg {
+font-family: 'Noto Serif JP', serif; font-size: 14px;
+color: rgba(201,168,76,0.8); margin-bottom: 28px; line-height: 1.6; letter-spacing: 1px;
+}
+.m-close {
+width: 100%; padding: 16px;
+border: 1px solid var(--glass-border); border-radius: 100px;
+background: transparent; color: var(--gold-pale);
+font-family: 'Noto Serif JP', serif; font-size: 14px; letter-spacing: 2px;
+cursor: pointer; transition: background 0.3s, border-color 0.3s;
+}
+.m-close:hover { background: var(--glass); border-color: var(--gold); }
+
+/* ── History ── */
+.history-section { width: 100%; max-width: 760px; margin: 28px auto 0; }
+.history-list { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.h-chip {
+background: var(--glass); border: 1px solid var(--glass-border); border-radius: 100px;
+padding: 5px 14px; font-size: 12px; color: var(--gold-pale); font-weight: 600; letter-spacing: 1px;
+display: flex; align-items: center; gap: 6px;
+animation: chip-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+@keyframes chip-in { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* Confetti */
+#confetti { position: fixed; inset: 0; z-index: 499; pointer-events: none; }
+
+/* Screen shake */
+@keyframes shake {
+0%  {transform:translate(0,0) rotate(0)}
+15% {transform:translate(-4px,3px) rotate(-0.4deg)}
+30% {transform:translate(4px,-3px) rotate(0.4deg)}
+45% {transform:translate(-3px,2px) rotate(-0.2deg)}
+60% {transform:translate(3px,-2px) rotate(0.2deg)}
+75% {transform:translate(-2px,1px) rotate(-0.1deg)}
+100%{transform:translate(0,0) rotate(0)}
+}
+.shake { animation: shake 0.45s cubic-bezier(.36,.07,.19,.97) both; }
+
+/* ── Mobile (Googleサイトなどの余白対策含む) ── */
+@media (max-width: 520px) {
+  .app { 
+    padding: 0 0 40px; /* 左右の余白をなくす */
+  }
+  .header { 
+    padding: 24px 16px 16px; 
+  }
+  .stage { 
+    width: 100vw; max-width: 100%; 
+    border-radius: 0; 
+    border-left: none; border-right: none; 
+    margin-top: 10px;
+  }
+  .stage video {
+    border-radius: 0;
+  }
+  .stage-overlay {
+    border-radius: 0;
+  }
+  .controls, .prize-section, .history-section { 
+    padding: 0 16px; box-sizing: border-box; 
+  }
+  .prize-grid { grid-template-columns: repeat(2, 1fr); }
+  .modal { padding: 40px 22px 32px; border-radius: 18px; width: 90%; }
+  .spin-btn { width: 100%; max-width: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<canvas id="confetti"></canvas>
+
+<div class="app" id="app">
+
+  <header class="header">
+    <div class="logo-eyebrow">プレミアム抽選会 — 豪華限定版</div>
+    <h1 class="logo-title">黄金のルーレット</h1>
+    <p class="logo-sub">幸運は勇者に微笑む</p>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-chip">抽選回数 <span id="sSpins">0</span></div>
+    <div class="stat-chip">獲得賞品数 <span id="sWon">0</span></div>
+    <div class="stat-chip">当選確率 <span id="sRate">—</span></div>
+    <div class="stat-chip" id="sAudioChip">音声 <span id="sAudio">オフ</span></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="css-fallback" id="fallback">
+      <div class="wheel-wrap" id="wheelWrap">
+        <svg class="wheel-svg" id="wheelSvg" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="wheel-pointer"></div>
+        <div class="ball" id="ball"></div>
+      </div>
+      <div class="fallback-label">簡易モードで再生中</div>
+    </div>
+    <video id="video" src="roulette.mp4" muted playsinline preload="auto"></video>
+    <div class="stage-overlay"></div>
+    <div class="pulse-ring" id="ring"></div>
+    <div class="video-badge" id="badge">
+      <div class="dot"></div>
+      <span id="badgeTxt">待機中</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="spin-btn" id="spinBtn" onclick="handleSpin()">
+      <span class="shimmer"></span>
+      <span class="btn-text">抽選スタート</span>
+    </button>
+    <div class="audio-hint" id="audioHint">画面をタップして音声をオンにする</div>
+  </div>
+
+  <div class="prize-section">
+    <div class="section-label">豪華賞品一覧</div>
+    <div class="prize-grid" id="prizeGrid"></div>
+  </div>
+
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="section-label">最近の当選履歴</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modalBg">
+  <div class="modal">
+    <div class="m-eyebrow">黄金のルーレット</div>
+    <span class="m-icon" id="mIcon">🎰</span>
+    <div class="m-name" id="mName">—</div>
+    <div class="m-value" id="mVal">—</div>
+    <div class="m-rarity" id="mRarity"></div>
+    <div class="m-divider"></div>
+    <div class="m-msg" id="mMsg">—</div>
+    <button class="m-close" onclick="closeModal()">賞品を受け取る</button>
+  </div>
+</div>
+
+<script>
+/* ───────────────────────────────
+   PRIZE CONFIG (日本向け設定)
+─────────────────────────────── */
+const PRIZES_CFG = [
+  { id:'p1', icon:'🏆', name:'現金100万円', value:'夢のビッグチャンス', rarity:'SSR', stock:1, maxStock:1, weight:1,
+    messages:["おめでとうございます！運命の女神があなたに微笑みました。","一生に一度の大当たり！"], color:'#C9A84C' },
+  { id:'p2', icon:'♨️', name:'高級温泉旅館 ペア宿泊券', value:'至福のひとときを', rarity:'SSR', stock:2, maxStock:2, weight:2,
+    messages:["日頃の疲れを癒す、極上の温泉旅行へご招待します。","素晴らしい引きですね！"], color:'#C9A84C' },
+  { id:'p3', icon:'💎', name:'最新型ラグジュアリー家電', value:'生活を豊かにする逸品', rarity:'SR', stock:3, maxStock:3, weight:5,
+    messages:["大人気の最新家電を獲得しました！","毎日が少し特別になるアイテムです。"], color:'#C39BD3' },
+  { id:'p4', icon:'🥩', name:'特選 黒毛和牛ギフト', value:'A5ランク 極上肉', rarity:'SR', stock:5, maxStock:5, weight:7,
+    messages:["とろけるような味わいをお楽しみください。","今夜はごちそうですね！"], color:'#C39BD3' },
+  { id:'p5', icon:'🎁', name:'極上カタログギフト', value:'選べる贅沢体験', rarity:'R', stock:8, maxStock:8, weight:12,
+    messages:["あなたのお好きなものを一つお選びいただけます。","どれにするか迷ってしまいますね。"], color:'#5DADE2' },
+  { id:'p6', icon:'🍶', name:'幻の銘酒 セット', value:'入手困難なプレミアム酒', rarity:'R', stock:10, maxStock:10, weight:15,
+    messages:["勝利の美酒を味わってください。","お酒好きにはたまらない一品！"], color:'#5DADE2' },
+  { id:'p7', icon:'🍰', name:'お取り寄せ絶品スイーツ', value:'話題の人気店からお届け', rarity:'N', stock:20, maxStock:20, weight:25,
+    messages:["甘いものでホッと一息つきませんか？","ティータイムにぴったりの品です。"], color:'#888' },
+  { id:'p8', icon:'☕', name:'有名カフェ デジタルギフト', value:'500円分 チャージ済み', rarity:'N', stock:30, maxStock:30, weight:33,
+    messages:["美味しいコーヒーでリラックスしてください。","ささやかなプレゼントです。"], color:'#888' },
+];
+
+/* ───────────────────────────────
+   STATE
+─────────────────────────────── */
+const S = {
+  spinning: false,
+  audioOk: false,
+  videoReady: false,
+  useVideo: false,
+  spins: 0, wins: 0,
+  history: [],
+  prizes: JSON.parse(JSON.stringify(PRIZES_CFG))
+};
+
+/* ───────────────────────────────
+   AUDIO ENGINE
+─────────────────────────────── */
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){return null;}
+  }
+  return audioCtx;
+}
+function unlockAudio() {
+  const c = getCtx(); if (!c) return;
+  if (c.state === 'suspended') {
+    c.resume().then(() => { S.audioOk=true; refreshAudioStat(); document.getElementById('audioHint').classList.remove('visible'); });
+  } else { S.audioOk=true; refreshAudioStat(); }
+}
+function tone(freq,type,gain,dur,delay=0) {
+  const c=getCtx(); if(!c||!S.audioOk) return;
+  try {
+    const o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,c.currentTime+delay);
+    g.gain.linearRampToValueAtTime(gain,c.currentTime+delay+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+delay+dur);
+    o.start(c.currentTime+delay); o.stop(c.currentTime+delay+dur+0.05);
+  }catch(e){}
+}
+function noise(dur,gainVal,delay=0) {
+  const c=getCtx(); if(!c||!S.audioOk) return;
+  try {
+    const buf=c.createBuffer(1,c.sampleRate*dur,c.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const src=c.createBufferSource(), g=c.createGain(), f=c.createBiquadFilter();
+    f.type='bandpass'; f.frequency.value=800; f.Q.value=0.8;
+    src.buffer=buf; src.connect(f); f.connect(g); g.connect(c.destination);
+    g.gain.setValueAtTime(0,c.currentTime+delay);
+    g.gain.linearRampToValueAtTime(gainVal,c.currentTime+delay+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+delay+dur);
+    src.start(c.currentTime+delay);
+  }catch(e){}
+}
+const SFX = {
+  spin() { for(let i=0;i<22;i++){ const t=i*0.13; noise(0.04,0.15+Math.random()*0.08,t); tone(200+Math.random()*60,'sine',0.04,0.03,t); } },
+  land() { tone(80,'sine',0.55,0.3,0); tone(155,'sine',0.18,0.15,0.05); noise(0.1,0.38,0); },
+  fanfare(r) {
+    const m={
+      SSR:[[523,0],[659,.15],[784,.3],[1047,.5],[1319,.7],[1047,.95],[784,1.15],[1047,1.4]],
+      SR:[[523,0],[659,.18],[784,.36],[1047,.54]],
+      R:[[523,0],[659,.2],[784,.4]],
+      N:[[523,0],[659,.25]]
+    };
+    (m[r]||m.N).forEach(([f,t])=>tone(f,'sine',0.24,0.2,t));
+    [130,165,196].forEach((f,i)=>tone(f,'triangle',0.14,0.8,i*0.05));
+  }
+};
+
+/* ───────────────────────────────
+   VIDEO ENGINE
+─────────────────────────────── */
+const vid = document.getElementById('video');
+const badge = document.getElementById('badge');
+const badgeTxt = document.getElementById('badgeTxt');
+let resultCb = null, fbTimer = null;
+
+vid.addEventListener('canplaythrough', () => {
+  S.videoReady=true; S.useVideo=true;
+  badge.classList.add('live'); badgeTxt.textContent='HD Ready';
+  document.getElementById('fallback').classList.remove('active');
+});
+vid.addEventListener('error', activateFallback);
+vid.addEventListener('stalled', activateFallback);
+vid.addEventListener('timeupdate', () => {
+  if (!resultCb) return;
+  const landAt = (vid.duration||12)*0.78;
+  if (vid.currentTime >= landAt) {
+    vid.pause(); const cb=resultCb; resultCb=null; cb();
+  }
+});
+
+function activateFallback() {
+  if (S.useVideo) return; // already set
+  S.useVideo=false;
+  document.getElementById('fallback').classList.add('active');
+  vid.style.display='none';
+  badgeTxt.textContent='簡易モード'; badge.classList.remove('live');
+}
+
+function playVideo(onResult) {
+  resultCb=null; clearTimeout(fbTimer);
+  if (S.useVideo && S.videoReady) {
+    vid.currentTime=0;
+    const doPlay = () => {
+      vid.muted=false;
+      vid.play().catch(()=>{ vid.muted=true; vid.play(); });
+      resultCb=onResult;
+      fbTimer=setTimeout(()=>{ if(resultCb){const cb=resultCb;resultCb=null;cb();} },14000);
+    };
+    vid.muted=true;
+    vid.play().then(doPlay).catch(()=>{ vid.muted=true; vid.play().then(doPlay).catch(()=>{activateFallback();runCSSAnim(onResult);}); });
+  } else {
+    activateFallback(); runCSSAnim(onResult);
+  }
+}
+
+function runCSSAnim(cb) {
+  const w=document.getElementById('wheelSvg'), b=document.getElementById('ball');
+  w.classList.remove('spinning'); b.classList.remove('rolling');
+  void w.offsetWidth;
+  w.classList.add('spinning'); b.classList.add('rolling');
+  setTimeout(()=>{ w.classList.remove('spinning'); b.classList.remove('rolling'); cb(); }, 3300);
+}
+
+/* ───────────────────────────────
+   PRIZE LOGIC
+─────────────────────────────── */
+function pickPrize() {
+  const avail=S.prizes.filter(p=>p.stock>0);
+  if(!avail.length) return null;
+  const total=avail.reduce((s,p)=>s+p.weight,0);
+  let r=Math.random()*total;
+  for(const p of avail){ r-=p.weight; if(r<=0) return p; }
+  return avail[avail.length-1];
+}
+
+/* ───────────────────────────────
+   CONFETTI
+─────────────────────────────── */
+function fireConfetti(rarity) {
+  const canvas=document.getElementById('confetti');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const n={SSR:200,SR:120,R:60,N:30}[rarity]||40;
+  const cols={
+    SSR:['#F0D080','#C9A84C','#fff','#FFE566','#A07828'],
+    SR:['#C39BD3','#9B59B6','#fff','#E8DAEF'],
+    R:['#5DADE2','#2E86C1','#fff','#AED6F1'],
+    N:['#C9A84C','#fff','rgba(201,168,76,0.6)']
+  }[rarity]||['#C9A84C','#fff'];
+  const ps=Array.from({length:n},()=>({
+    x:canvas.width/2+(Math.random()-.5)*200, y:canvas.height*0.35,
+    vx:(Math.random()-.5)*12, vy:-(Math.random()*10+4),
+    color:cols[Math.floor(Math.random()*cols.length)],
+    size:Math.random()*7+3, rot:Math.random()*360, rotV:(Math.random()-.5)*8,
+    life:1, decay:Math.random()*0.012+0.008, shape:Math.random()>.5?'rect':'circle'
+  }));
+  let raf;
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    ps.forEach(p=>{
+      if(p.life<=0)return; alive=true;
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.25; p.vx*=0.99; p.rot+=p.rotV; p.life-=p.decay;
+      ctx.save(); ctx.globalAlpha=Math.max(0,p.life);
+      ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color;
+      if(p.shape==='circle'){ctx.beginPath();ctx.arc(0,0,p.size/2,0,Math.PI*2);ctx.fill();}
+      else ctx.fillRect(-p.size/2,-p.size/3,p.size,p.size*.6);
+      ctx.restore();
+    });
+    if(alive) raf=requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  })();
+}
+
+/* ───────────────────────────────
+   UI
+─────────────────────────────── */
+function renderGrid() {
+  const g=document.getElementById('prizeGrid'); g.innerHTML='';
+  S.prizes.forEach(p=>{
+    const pct=p.maxStock>0?(p.stock/p.maxStock)*100:0;
+    const d=document.createElement('div');
+    d.className='prize-card'+(p.stock===0?' depleted':'');
+    d.id='card-'+p.id;
+    d.innerHTML=`
+      <span class="rarity-badge r-${p.rarity}">${p.rarity}</span>
+      <span class="p-icon">${p.icon}</span>
+      <div class="p-name">${p.name}</div>
+      <div class="p-value">${p.value}</div>
+      <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
+      <div class="p-stock">残り: ${p.stock} / ${p.maxStock}</div>`;
+    g.appendChild(d);
+  });
+}
+
+function updateCard(p) {
+  const card=document.getElementById('card-'+p.id); if(!card)return;
+  const pct=p.maxStock>0?(p.stock/p.maxStock)*100:0;
+  card.querySelector('.bar').style.width=pct+'%';
+  card.querySelector('.p-stock').textContent='残り: '+p.stock+' / '+p.maxStock;
+  if(p.stock===0) card.classList.add('depleted');
+}
+
+function refreshStats() {
+  document.getElementById('sSpins').textContent=S.spins;
+  document.getElementById('sWon').textContent=S.wins;
+  document.getElementById('sRate').textContent=S.spins>0?Math.round((S.wins/S.spins)*100)+'%':'—';
+}
+function refreshAudioStat() {
+  document.getElementById('sAudio').textContent=S.audioOk?'オン':'オフ';
+  document.getElementById('sAudioChip').classList.toggle('active',S.audioOk);
+}
+
+function addHistory(p) {
+  S.history.unshift(p); if(S.history.length>8) S.history.pop();
+  const list=document.getElementById('historyList');
+  document.getElementById('historySection').style.display='block';
+  list.innerHTML='';
+  S.history.forEach((h,i)=>{
+    const c=document.createElement('div'); c.className='h-chip';
+    c.style.animationDelay=i===0?'0ms':i*30+'ms';
+    c.innerHTML=`${h.icon} <span>${h.name}</span>`; list.appendChild(c);
+  });
+}
+
+function openModal(p) {
+  const msg=p.messages[Math.floor(Math.random()*p.messages.length)];
+  document.getElementById('mIcon').textContent=p.icon;
+  document.getElementById('mName').textContent=p.name;
+  document.getElementById('mVal').textContent=p.value;
+  document.getElementById('mMsg').textContent=msg;
+  const r=document.getElementById('mRarity');
+  r.textContent=p.rarity.toUpperCase();
+  r.className='m-rarity r-'+p.rarity;
+  r.style.cssText+=`;border-color:${p.color}40;color:${p.color};background:${p.color}18`;
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  document.getElementById('spinBtn').disabled=false;
+  S.spinning=false;
+}
+
+/* ───────────────────────────────
+   SPIN
+─────────────────────────────── */
+function handleSpin() {
+  if(S.spinning) return;
+  unlockAudio();
+  const avail=S.prizes.filter(p=>p.stock>0);
+  if(!avail.length){ alert('すべての賞品が獲得されました。ご参加ありがとうございました！'); return; }
+  S.spinning=true; S.spins++;
+  document.getElementById('spinBtn').disabled=true;
+  SFX.spin(); refreshStats();
+  const prize=pickPrize();
+  playVideo(()=>{
+    SFX.land();
+    setTimeout(()=>SFX.fanfare(prize.rarity),200);
+    prize.stock=Math.max(0,prize.stock-1); S.wins++;
+    refreshStats(); updateCard(prize); addHistory(prize);
+    const app=document.getElementById('app');
+    app.classList.add('shake'); setTimeout(()=>app.classList.remove('shake'),500);
+    const ring=document.getElementById('ring');
+    ring.classList.remove('firing'); void ring.offsetWidth; ring.classList.add('firing');
+    setTimeout(()=>fireConfetti(prize.rarity),100);
+    setTimeout(()=>openModal(prize),600);
+  });
+}
+
+/* ───────────────────────────────
+   CSS WHEEL BUILDER
+─────────────────────────────── */
+function buildWheel() {
+  const svg=document.getElementById('wheelSvg');
+  const prizes=S.prizes, n=prizes.length;
+  const cx=140,cy=140,r=128,ir=30;
+  const fills=['#1a0a00','#0a1a00','#001018','#18000a','#100a00','#001010','#0a0018','#100018'];
+  const strokes=['#C9A84C','#A07828','#D4B060','#8B6914','#C9A84C','#B8963C','#D4B060','#906010'];
+  let h='<defs><filter id="wglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+  for(let i=0;i<n;i++){
+    const a1=(i/n)*Math.PI*2-Math.PI/2, a2=((i+1)/n)*Math.PI*2-Math.PI/2;
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
+    const x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+    const ix1=cx+ir*Math.cos(a1),iy1=cy+ir*Math.sin(a1);
+    const ix2=cx+ir*Math.cos(a2),iy2=cy+ir*Math.sin(a2);
+    const ma=(a1+a2)/2,mr=(r+ir)/2;
+    const tx=cx+mr*Math.cos(ma),ty=cy+mr*Math.sin(ma);
+    h+=`<path d="M${ix1},${iy1} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} L${ix2},${iy2} A${ir},${ir} 0 0,0 ${ix1},${iy1}" fill="${fills[i%fills.length]}" stroke="${strokes[i%strokes.length]}" stroke-width="1.2"/>`;
+    h+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="16" transform="rotate(${((a1+a2)/2)*180/Math.PI+90},${tx},${ty})">${prizes[i].icon}</text>`;
+  }
+  h+=`<circle cx="${cx}" cy="${cy}" r="${ir}" fill="#080600" stroke="#C9A84C" stroke-width="2.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${ir*0.55}" fill="#C9A84C" opacity="0.9" filter="url(#wglow)"/>`;
+  svg.innerHTML=h;
+}
+
+/* ───────────────────────────────
+   KEYBOARD & TOUCH
+─────────────────────────────── */
+document.addEventListener('keydown', e=>{
+  if(e.code==='Space'&&!S.spinning){e.preventDefault();handleSpin();}
+  if((e.code==='Enter'||e.code==='Escape')&&document.getElementById('modalBg').classList.contains('open')) closeModal();
+});
+document.addEventListener('touchstart', ()=>{ unlockAudio(); document.getElementById('audioHint').classList.remove('visible'); }, {once:true});
+document.addEventListener('click', unlockAudio, {once:true});
+
+setTimeout(()=>{ if(!S.audioOk) document.getElementById('audioHint').classList.add('visible'); }, 2000);
+
+/* ── INIT ── */
+buildWheel();
+renderGrid();
+refreshStats();
+</script>
+
+</body>
+</html>
