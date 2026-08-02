@@ -501,6 +501,10 @@ animation: chip-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
     </button>
     <div class="status-note" id="statusNote"></div>
     <div class="audio-hint" id="audioHint">画面をタップして音声をオンにする</div>
+    <div id="adminBox" style="display:none; margin-top:10px; gap:8px; align-items:center;">
+      <input type="password" id="adminPasscode" placeholder="管理者の合言葉" style="padding:8px 12px; border-radius:100px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.03); color:var(--gold-pale); font-size:12px;">
+      <button onclick="enterTestMode()" style="padding:8px 16px; border-radius:100px; border:1px solid var(--gold); background:transparent; color:var(--gold-light); font-size:12px; cursor:pointer;">テストモード開始</button>
+    </div>
   </div>
 
   <div class="prize-section">
@@ -573,7 +577,9 @@ const S = {
   videoReady: false,
   useVideo: false,
   prizes: [],
-  hasSpun: false
+  hasSpun: false,
+  testMode: false,
+  testPasscode: ''
 };
 
 /* ───────────────────────────────
@@ -796,10 +802,12 @@ function openModal(prize, opts) {
 
 function closeModal() {
   document.getElementById('modalBg').classList.remove('open');
-  if (!S.hasSpun) {
-    document.getElementById('spinBtn').disabled=false;
+  S.spinning = false;
+  if (S.testMode) {
+    setSpinButtonState('test-ready');
+  } else if (!S.hasSpun) {
+    document.getElementById('spinBtn').disabled = false;
   }
-  S.spinning=false;
 }
 
 /* ───────────────────────────────
@@ -821,14 +829,31 @@ function setSpinButtonState(state) {
     btn.disabled = true; txt.textContent = '受付終了'; note.textContent = 'すべての賞品がなくなりました';
   } else if (state === 'error') {
     btn.disabled = true; txt.textContent = '通信エラー'; note.textContent = 'ページを再読み込みしてください';
+  } else if (state === 'test-ready') {
+    btn.disabled = false; txt.textContent = 'テスト抽選する'; note.textContent = 'テストモード中（在庫・記録は変化しません）';
   }
+}
+
+/* ───────────────────────────────
+   管理者テストモード
+   URLに ?admin=1 を付けて開くと合言葉欄が出る。
+   正しい合言葉を入れると、在庫やDrawsシートに一切触れずに
+   何度でも演出込みで抽選を試せるようになる。
+─────────────────────────────── */
+function enterTestMode() {
+  const pass = document.getElementById('adminPasscode').value;
+  if (!pass) return;
+  S.testMode = true;
+  S.testPasscode = pass;
+  document.getElementById('adminBox').style.display = 'none';
+  setSpinButtonState('test-ready');
 }
 
 /* ───────────────────────────────
    SPIN
 ─────────────────────────────── */
 async function handleSpin() {
-  if (S.spinning || S.hasSpun) return;
+  if (S.spinning || (S.hasSpun && !S.testMode)) return;
   unlockAudio();
   S.spinning = true;
   setSpinButtonState('spinning');
@@ -836,28 +861,34 @@ async function handleSpin() {
 
   // 演出（動画/CSSホイール）とサーバーへの抽選リクエストを並行して走らせる
   const animDone = new Promise(resolve => playVideo(resolve));
-  const spinResultPromise = apiPost({ action: 'spin', deviceId: DEVICE_ID }).catch(err => ({ ok:false, error: String(err) }));
+  const spinResultPromise = S.testMode
+    ? apiPost({ action: 'testSpin', passcode: S.testPasscode }).catch(err => ({ ok:false, error: String(err) }))
+    : apiPost({ action: 'spin', deviceId: DEVICE_ID }).catch(err => ({ ok:false, error: String(err) }));
 
   const [, result] = await Promise.all([animDone, spinResultPromise]);
 
   if (!result || !result.ok) {
     S.spinning = false;
-    setSpinButtonState('ready');
+    setSpinButtonState(S.testMode ? 'test-ready' : 'ready');
     alert((result && result.error) || '通信エラーが発生しました。もう一度お試しください。');
     return;
   }
 
   const prize = result.prize;
-  S.hasSpun = true;
 
   SFX.land();
   setTimeout(()=>SFX.fanfare(prize.rarity),200);
 
-  // サーバー側で減った在庫を画面にも反映
-  const local = S.prizes.find(p => p.id === prize.id);
-  if (local) {
-    local.stock = Math.max(0, local.stock - 1);
-    updateCardStock(local.id, local.stock, local.maxStock);
+  if (S.testMode) {
+    // テストモードでは在庫・記録には触れない（画面上の在庫表示も変更しない）
+  } else {
+    S.hasSpun = true;
+    // サーバー側で減った在庫を画面にも反映
+    const local = S.prizes.find(p => p.id === prize.id);
+    if (local) {
+      local.stock = Math.max(0, local.stock - 1);
+      updateCardStock(local.id, local.stock, local.maxStock);
+    }
   }
 
   const app=document.getElementById('app');
@@ -867,7 +898,8 @@ async function handleSpin() {
   setTimeout(()=>fireConfetti(prize.rarity),100);
   setTimeout(()=>openModal(prize),600);
 
-  setSpinButtonState('already');
+  S.spinning = false;
+  setSpinButtonState(S.testMode ? 'test-ready' : 'already');
 }
 
 /* ───────────────────────────────
@@ -902,6 +934,12 @@ function buildWheel() {
 ─────────────────────────────── */
 async function init() {
   setSpinButtonState('loading');
+
+  // ?admin=1 を付けて開いた場合、管理者用テストモードの合言葉欄を表示する
+  if (new URLSearchParams(location.search).get('admin') === '1') {
+    document.getElementById('adminBox').style.display = 'flex';
+  }
+
   try {
     const [prizesRes, statusRes] = await Promise.all([
       apiGet('prizes', {}),
@@ -933,7 +971,7 @@ async function init() {
    KEYBOARD & TOUCH
 ─────────────────────────────── */
 document.addEventListener('keydown', e=>{
-  if(e.code==='Space'&&!S.spinning&&!S.hasSpun){e.preventDefault();handleSpin();}
+  if(e.code==='Space'&&!S.spinning&&(!S.hasSpun||S.testMode)){e.preventDefault();handleSpin();}
   if((e.code==='Enter'||e.code==='Escape')&&document.getElementById('modalBg').classList.contains('open')) closeModal();
 });
 document.addEventListener('touchstart', ()=>{ unlockAudio(); document.getElementById('audioHint').classList.remove('visible'); }, {once:true});
