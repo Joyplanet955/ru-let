@@ -26,7 +26,6 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-/* Googleサイト埋め込み時の余白対策として強制リセット */
 width: 100vw; min-height: 100vh;
 margin: 0 !important; padding: 0 !important;
 background: var(--black-deep);
@@ -261,12 +260,17 @@ transform: translateX(-100%);
 animation: shimmer-idle 3.5s ease infinite;
 }
 @keyframes shimmer-idle {
-0%,60%  { transform: translateX(-100%); }
+0%,60%   { transform: translateX(-100%); }
 80%,100%{ transform: translateX(100%); }
 }
 .spin-btn:disabled .shimmer { animation: none; }
 
 .spin-btn .btn-text { position: relative; z-index: 1; }
+
+.status-note {
+font-size: 12px; letter-spacing: 1px; color: var(--text-muted);
+text-align: center; font-weight: 600; min-height: 16px;
+}
 
 .audio-hint {
 font-size: 11px; letter-spacing: 1px; color: var(--text-muted);
@@ -311,7 +315,8 @@ background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparen
 }
 .prize-card:hover { transform: translateY(-3px); border-color: rgba(201,168,76,0.35); box-shadow: var(--shadow-gold); }
 .prize-card.depleted { opacity: 0.3; pointer-events: none; }
-.prize-card .p-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+.prize-card .p-icon { font-size: 24px; margin-bottom: 8px; display: block; height: 48px; display: flex; align-items: center; justify-content: center; }
+.prize-card .p-icon img { max-width: 100%; max-height: 48px; object-fit: contain; border-radius: 6px; }
 .prize-card .p-name {
 font-family: 'Noto Serif JP', serif; font-size: 12px; font-weight: 700;
 color: var(--gold-light); letter-spacing: 1px; margin-bottom: 4px;
@@ -326,7 +331,7 @@ font-size: 9px; letter-spacing: 1px; font-weight: 700;
 padding: 2px 7px; border-radius: 100px;
 }
 
-/* ── 日本向けレアリティクラス ── */
+/* ── レアリティクラス ── */
 .r-N   { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.35); }
 .r-R   { background: rgba(41,128,185,0.15); color: #5DADE2; border: 1px solid rgba(93,173,226,0.3); }
 .r-SR  { background: rgba(142,68,173,0.15); color: #C39BD3; border: 1px solid rgba(195,155,211,0.3); }
@@ -371,10 +376,12 @@ pointer-events: none;
 
 .m-eyebrow { font-size: 11px; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 12px; }
 .m-icon {
-font-size: 56px; margin-bottom: 16px; display: block;
+font-size: 56px; margin-bottom: 16px; display: flex; justify-content: center; align-items: center;
 animation: icon-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
 animation-delay: 0.15s;
+min-height: 80px;
 }
+.m-icon img { max-width: 140px; max-height: 140px; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 @keyframes icon-pop { from{transform:scale(0) rotate(-20deg);opacity:0} to{transform:scale(1) rotate(0);opacity:1} }
 .m-name {
 font-family: 'Noto Serif JP', serif; font-size: clamp(20px, 5vw, 30px); font-weight: 900; letter-spacing: 2px;
@@ -394,8 +401,16 @@ padding: 4px 14px; border-radius: 100px; margin-bottom: 24px;
 .m-divider { height: 1px; margin: 0 0 24px; background: linear-gradient(90deg, transparent, var(--glass-border), transparent); }
 .m-msg {
 font-family: 'Noto Serif JP', serif; font-size: 14px;
-color: rgba(201,168,76,0.8); margin-bottom: 28px; line-height: 1.6; letter-spacing: 1px;
+color: rgba(201,168,76,0.8); margin-bottom: 24px; line-height: 1.6; letter-spacing: 1px;
 }
+.m-link-btn {
+display: none; width: 100%; padding: 14px; margin-bottom: 12px;
+border-radius: 100px; background: linear-gradient(135deg, #F0D080 0%, #C9A84C 100%);
+color: #000; font-family: 'Noto Serif JP', serif; font-size: 14px; font-weight: bold;
+text-decoration: none; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(201,168,76,0.4);
+transition: transform 0.2s;
+}
+.m-link-btn:hover { transform: scale(1.02); }
 .m-close {
 width: 100%; padding: 16px;
 border: 1px solid var(--glass-border); border-radius: 100px;
@@ -431,29 +446,12 @@ animation: chip-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
 }
 .shake { animation: shake 0.45s cubic-bezier(.36,.07,.19,.97) both; }
 
-/* ── Mobile (Googleサイトなどの余白対策含む) ── */
 @media (max-width: 520px) {
-  .app { 
-    padding: 0 0 40px; /* 左右の余白をなくす */
-  }
-  .header { 
-    padding: 24px 16px 16px; 
-  }
-  .stage { 
-    width: 100vw; max-width: 100%; 
-    border-radius: 0; 
-    border-left: none; border-right: none; 
-    margin-top: 10px;
-  }
-  .stage video {
-    border-radius: 0;
-  }
-  .stage-overlay {
-    border-radius: 0;
-  }
-  .controls, .prize-section, .history-section { 
-    padding: 0 16px; box-sizing: border-box; 
-  }
+  .app { padding: 0 0 40px; }
+  .header { padding: 24px 16px 16px; }
+  .stage { width: 100vw; max-width: 100%; border-radius: 0; border-left: none; border-right: none; margin-top: 10px; }
+  .stage video, .stage-overlay { border-radius: 0; }
+  .controls, .prize-section, .history-section { padding: 0 16px; box-sizing: border-box; }
   .prize-grid { grid-template-columns: repeat(2, 1fr); }
   .modal { padding: 40px 22px 32px; border-radius: 18px; width: 90%; }
   .spin-btn { width: 100%; max-width: none; }
@@ -474,9 +472,7 @@ animation: chip-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
   </header>
 
   <div class="stats-bar">
-    <div class="stat-chip">抽選回数 <span id="sSpins">0</span></div>
-    <div class="stat-chip">獲得賞品数 <span id="sWon">0</span></div>
-    <div class="stat-chip">当選確率 <span id="sRate">—</span></div>
+    <div class="stat-chip">総抽選回数 <span id="sSpins">—</span></div>
     <div class="stat-chip" id="sAudioChip">音声 <span id="sAudio">オフ</span></div>
   </div>
 
@@ -499,10 +495,11 @@ animation: chip-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
   </div>
 
   <div class="controls">
-    <button class="spin-btn" id="spinBtn" onclick="handleSpin()">
+    <button class="spin-btn" id="spinBtn" onclick="handleSpin()" disabled>
       <span class="shimmer"></span>
-      <span class="btn-text">抽選スタート</span>
+      <span class="btn-text" id="spinBtnText">読み込み中…</span>
     </button>
+    <div class="status-note" id="statusNote"></div>
     <div class="audio-hint" id="audioHint">画面をタップして音声をオンにする</div>
   </div>
 
@@ -511,48 +508,61 @@ animation: chip-in 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
     <div class="prize-grid" id="prizeGrid"></div>
   </div>
 
-  <div class="history-section" id="historySection" style="display:none">
-    <div class="section-label">最近の当選履歴</div>
-    <div class="history-list" id="historyList"></div>
-  </div>
-
 </div>
 
 <div class="modal-backdrop" id="modalBg">
   <div class="modal">
-    <div class="m-eyebrow">黄金のルーレット</div>
-    <span class="m-icon" id="mIcon">🎰</span>
+    <div class="m-eyebrow" id="mEyebrow">黄金のルーレット</div>
+    <div class="m-icon" id="mIcon">🎰</div>
     <div class="m-name" id="mName">—</div>
     <div class="m-value" id="mVal">—</div>
     <div class="m-rarity" id="mRarity"></div>
     <div class="m-divider"></div>
     <div class="m-msg" id="mMsg">—</div>
+    <a href="#" id="mLinkBtn" target="_blank" class="m-link-btn">詳細・イベント情報を見る ＞</a>
     <button class="m-close" onclick="closeModal()">賞品を受け取る</button>
   </div>
 </div>
 
 <script>
+/* ═══════════════════════════════════════════════
+   設定：ここにデプロイした GAS ウェブアプリの exec URL を入れる
+   （Apps Script エディタ →「デプロイ」→「ウェブアプリ」で発行されるURL）
+═══════════════════════════════════════════════ */
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwoVCc3tbhs6ipVHzMLHVK1_VLPmHcOpBY-1kEIBpBG36Hhi4loE2-qpI-Dx2ZG87UrYw/exec'; // https://script.google.com/macros/s/xxxx/exec
+
 /* ───────────────────────────────
-   PRIZE CONFIG (日本向け設定)
+   端末識別ID（名前入力なしで1人1回を判定するための匿名ID）
 ─────────────────────────────── */
-const PRIZES_CFG = [
-  { id:'p1', icon:'🏆', name:'現金100万円', value:'夢のビッグチャンス', rarity:'SSR', stock:1, maxStock:1, weight:1,
-    messages:["おめでとうございます！運命の女神があなたに微笑みました。","一生に一度の大当たり！"], color:'#C9A84C' },
-  { id:'p2', icon:'♨️', name:'高級温泉旅館 ペア宿泊券', value:'至福のひとときを', rarity:'SSR', stock:2, maxStock:2, weight:2,
-    messages:["日頃の疲れを癒す、極上の温泉旅行へご招待します。","素晴らしい引きですね！"], color:'#C9A84C' },
-  { id:'p3', icon:'💎', name:'最新型ラグジュアリー家電', value:'生活を豊かにする逸品', rarity:'SR', stock:3, maxStock:3, weight:5,
-    messages:["大人気の最新家電を獲得しました！","毎日が少し特別になるアイテムです。"], color:'#C39BD3' },
-  { id:'p4', icon:'🥩', name:'特選 黒毛和牛ギフト', value:'A5ランク 極上肉', rarity:'SR', stock:5, maxStock:5, weight:7,
-    messages:["とろけるような味わいをお楽しみください。","今夜はごちそうですね！"], color:'#C39BD3' },
-  { id:'p5', icon:'🎁', name:'極上カタログギフト', value:'選べる贅沢体験', rarity:'R', stock:8, maxStock:8, weight:12,
-    messages:["あなたのお好きなものを一つお選びいただけます。","どれにするか迷ってしまいますね。"], color:'#5DADE2' },
-  { id:'p6', icon:'🍶', name:'幻の銘酒 セット', value:'入手困難なプレミアム酒', rarity:'R', stock:10, maxStock:10, weight:15,
-    messages:["勝利の美酒を味わってください。","お酒好きにはたまらない一品！"], color:'#5DADE2' },
-  { id:'p7', icon:'🍰', name:'お取り寄せ絶品スイーツ', value:'話題の人気店からお届け', rarity:'N', stock:20, maxStock:20, weight:25,
-    messages:["甘いものでホッと一息つきませんか？","ティータイムにぴったりの品です。"], color:'#888' },
-  { id:'p8', icon:'☕', name:'有名カフェ デジタルギフト', value:'500円分 チャージ済み', rarity:'N', stock:30, maxStock:30, weight:33,
-    messages:["美味しいコーヒーでリラックスしてください。","ささやかなプレゼントです。"], color:'#888' },
-];
+function getDeviceId() {
+  const KEY = 'roulette_device_id';
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = (crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+
+/* ───────────────────────────────
+   バックエンド通信
+   POSTは text/plain で送ることで、GAS が対応していない
+   プリフライト(OPTIONS)リクエストの発生を避けている
+─────────────────────────────── */
+async function apiGet(action, params) {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`${GAS_WEBAPP_URL}?${qs}`);
+  return res.json();
+}
+async function apiPost(payload) {
+  const res = await fetch(GAS_WEBAPP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
 
 /* ───────────────────────────────
    STATE
@@ -562,9 +572,8 @@ const S = {
   audioOk: false,
   videoReady: false,
   useVideo: false,
-  spins: 0, wins: 0,
-  history: [],
-  prizes: JSON.parse(JSON.stringify(PRIZES_CFG))
+  prizes: [],
+  hasSpun: false
 };
 
 /* ───────────────────────────────
@@ -648,7 +657,7 @@ vid.addEventListener('timeupdate', () => {
 });
 
 function activateFallback() {
-  if (S.useVideo) return; // already set
+  if (S.useVideo) return;
   S.useVideo=false;
   document.getElementById('fallback').classList.add('active');
   vid.style.display='none';
@@ -678,18 +687,6 @@ function runCSSAnim(cb) {
   void w.offsetWidth;
   w.classList.add('spinning'); b.classList.add('rolling');
   setTimeout(()=>{ w.classList.remove('spinning'); b.classList.remove('rolling'); cb(); }, 3300);
-}
-
-/* ───────────────────────────────
-   PRIZE LOGIC
-─────────────────────────────── */
-function pickPrize() {
-  const avail=S.prizes.filter(p=>p.stock>0);
-  if(!avail.length) return null;
-  const total=avail.reduce((s,p)=>s+p.weight,0);
-  let r=Math.random()*total;
-  for(const p of avail){ r-=p.weight; if(r<=0) return p; }
-  return avail[avail.length-1];
 }
 
 /* ───────────────────────────────
@@ -742,9 +739,10 @@ function renderGrid() {
     const d=document.createElement('div');
     d.className='prize-card'+(p.stock===0?' depleted':'');
     d.id='card-'+p.id;
+    const iconHtml = p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon;
     d.innerHTML=`
       <span class="rarity-badge r-${p.rarity}">${p.rarity}</span>
-      <span class="p-icon">${p.icon}</span>
+      <span class="p-icon">${iconHtml}</span>
       <div class="p-name">${p.name}</div>
       <div class="p-value">${p.value}</div>
       <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
@@ -753,79 +751,123 @@ function renderGrid() {
   });
 }
 
-function updateCard(p) {
-  const card=document.getElementById('card-'+p.id); if(!card)return;
-  const pct=p.maxStock>0?(p.stock/p.maxStock)*100:0;
+function updateCardStock(prizeId, newStock, maxStock) {
+  const card=document.getElementById('card-'+prizeId); if(!card)return;
+  const pct=maxStock>0?(newStock/maxStock)*100:0;
   card.querySelector('.bar').style.width=pct+'%';
-  card.querySelector('.p-stock').textContent='残り: '+p.stock+' / '+p.maxStock;
-  if(p.stock===0) card.classList.add('depleted');
+  card.querySelector('.p-stock').textContent='残り: '+newStock+' / '+maxStock;
+  if(newStock===0) card.classList.add('depleted'); else card.classList.remove('depleted');
 }
 
-function refreshStats() {
-  document.getElementById('sSpins').textContent=S.spins;
-  document.getElementById('sWon').textContent=S.wins;
-  document.getElementById('sRate').textContent=S.spins>0?Math.round((S.wins/S.spins)*100)+'%':'—';
-}
 function refreshAudioStat() {
   document.getElementById('sAudio').textContent=S.audioOk?'オン':'オフ';
   document.getElementById('sAudioChip').classList.toggle('active',S.audioOk);
 }
 
-function addHistory(p) {
-  S.history.unshift(p); if(S.history.length>8) S.history.pop();
-  const list=document.getElementById('historyList');
-  document.getElementById('historySection').style.display='block';
-  list.innerHTML='';
-  S.history.forEach((h,i)=>{
-    const c=document.createElement('div'); c.className='h-chip';
-    c.style.animationDelay=i===0?'0ms':i*30+'ms';
-    c.innerHTML=`${h.icon} <span>${h.name}</span>`; list.appendChild(c);
-  });
-}
+function openModal(prize, opts) {
+  opts = opts || {};
+  const mIcon = document.getElementById('mIcon');
+  if (prize.image) {
+    mIcon.innerHTML = `<img src="${prize.image}" alt="${prize.name}">`;
+  } else {
+    mIcon.textContent = prize.icon || '🎁';
+  }
 
-function openModal(p) {
-  const msg=p.messages[Math.floor(Math.random()*p.messages.length)];
-  document.getElementById('mIcon').textContent=p.icon;
-  document.getElementById('mName').textContent=p.name;
-  document.getElementById('mVal').textContent=p.value;
-  document.getElementById('mMsg').textContent=msg;
+  document.getElementById('mEyebrow').textContent = opts.reviewMode ? 'あなたの当選景品' : '黄金のルーレット';
+  document.getElementById('mName').textContent=prize.name;
+  document.getElementById('mVal').textContent=prize.value;
+  document.getElementById('mMsg').textContent=prize.message || prize.messages || '当選おめでとうございます！';
+
+  const linkBtn = document.getElementById('mLinkBtn');
+  if (prize.url) {
+    linkBtn.href = prize.url;
+    linkBtn.style.display = 'block';
+  } else {
+    linkBtn.style.display = 'none';
+  }
+
   const r=document.getElementById('mRarity');
-  r.textContent=p.rarity.toUpperCase();
-  r.className='m-rarity r-'+p.rarity;
-  r.style.cssText+=`;border-color:${p.color}40;color:${p.color};background:${p.color}18`;
+  r.textContent=(prize.rarity||'N').toUpperCase();
+  r.className='m-rarity r-'+prize.rarity;
+  const color = prize.color || '#C9A84C';
+  r.style.cssText+=`;border-color:${color}40;color:${color};background:${color}18`;
   document.getElementById('modalBg').classList.add('open');
 }
 
 function closeModal() {
   document.getElementById('modalBg').classList.remove('open');
-  document.getElementById('spinBtn').disabled=false;
+  if (!S.hasSpun) {
+    document.getElementById('spinBtn').disabled=false;
+  }
   S.spinning=false;
+}
+
+/* ───────────────────────────────
+   参加ステータスに応じたボタン表示
+─────────────────────────────── */
+function setSpinButtonState(state) {
+  const btn = document.getElementById('spinBtn');
+  const txt = document.getElementById('spinBtnText');
+  const note = document.getElementById('statusNote');
+  if (state === 'loading') {
+    btn.disabled = true; txt.textContent = '読み込み中…'; note.textContent = '';
+  } else if (state === 'ready') {
+    btn.disabled = false; txt.textContent = '抽選スタート'; note.textContent = '';
+  } else if (state === 'spinning') {
+    btn.disabled = true; txt.textContent = '抽選中…'; note.textContent = '';
+  } else if (state === 'already') {
+    btn.disabled = true; txt.textContent = '抽選済みです'; note.textContent = 'この端末では既に一度ご参加いただいています';
+  } else if (state === 'soldout') {
+    btn.disabled = true; txt.textContent = '受付終了'; note.textContent = 'すべての賞品がなくなりました';
+  } else if (state === 'error') {
+    btn.disabled = true; txt.textContent = '通信エラー'; note.textContent = 'ページを再読み込みしてください';
+  }
 }
 
 /* ───────────────────────────────
    SPIN
 ─────────────────────────────── */
-function handleSpin() {
-  if(S.spinning) return;
+async function handleSpin() {
+  if (S.spinning || S.hasSpun) return;
   unlockAudio();
-  const avail=S.prizes.filter(p=>p.stock>0);
-  if(!avail.length){ alert('すべての賞品が獲得されました。ご参加ありがとうございました！'); return; }
-  S.spinning=true; S.spins++;
-  document.getElementById('spinBtn').disabled=true;
-  SFX.spin(); refreshStats();
-  const prize=pickPrize();
-  playVideo(()=>{
-    SFX.land();
-    setTimeout(()=>SFX.fanfare(prize.rarity),200);
-    prize.stock=Math.max(0,prize.stock-1); S.wins++;
-    refreshStats(); updateCard(prize); addHistory(prize);
-    const app=document.getElementById('app');
-    app.classList.add('shake'); setTimeout(()=>app.classList.remove('shake'),500);
-    const ring=document.getElementById('ring');
-    ring.classList.remove('firing'); void ring.offsetWidth; ring.classList.add('firing');
-    setTimeout(()=>fireConfetti(prize.rarity),100);
-    setTimeout(()=>openModal(prize),600);
-  });
+  S.spinning = true;
+  setSpinButtonState('spinning');
+  SFX.spin();
+
+  // 演出（動画/CSSホイール）とサーバーへの抽選リクエストを並行して走らせる
+  const animDone = new Promise(resolve => playVideo(resolve));
+  const spinResultPromise = apiPost({ action: 'spin', deviceId: DEVICE_ID }).catch(err => ({ ok:false, error: String(err) }));
+
+  const [, result] = await Promise.all([animDone, spinResultPromise]);
+
+  if (!result || !result.ok) {
+    S.spinning = false;
+    setSpinButtonState('ready');
+    alert((result && result.error) || '通信エラーが発生しました。もう一度お試しください。');
+    return;
+  }
+
+  const prize = result.prize;
+  S.hasSpun = true;
+
+  SFX.land();
+  setTimeout(()=>SFX.fanfare(prize.rarity),200);
+
+  // サーバー側で減った在庫を画面にも反映
+  const local = S.prizes.find(p => p.id === prize.id);
+  if (local) {
+    local.stock = Math.max(0, local.stock - 1);
+    updateCardStock(local.id, local.stock, local.maxStock);
+  }
+
+  const app=document.getElementById('app');
+  app.classList.add('shake'); setTimeout(()=>app.classList.remove('shake'),500);
+  const ring=document.getElementById('ring');
+  ring.classList.remove('firing'); void ring.offsetWidth; ring.classList.add('firing');
+  setTimeout(()=>fireConfetti(prize.rarity),100);
+  setTimeout(()=>openModal(prize),600);
+
+  setSpinButtonState('already');
 }
 
 /* ───────────────────────────────
@@ -834,6 +876,7 @@ function handleSpin() {
 function buildWheel() {
   const svg=document.getElementById('wheelSvg');
   const prizes=S.prizes, n=prizes.length;
+  if (!n) return;
   const cx=140,cy=140,r=128,ir=30;
   const fills=['#1a0a00','#0a1a00','#001018','#18000a','#100a00','#001010','#0a0018','#100018'];
   const strokes=['#C9A84C','#A07828','#D4B060','#8B6914','#C9A84C','#B8963C','#D4B060','#906010'];
@@ -847,7 +890,7 @@ function buildWheel() {
     const ma=(a1+a2)/2,mr=(r+ir)/2;
     const tx=cx+mr*Math.cos(ma),ty=cy+mr*Math.sin(ma);
     h+=`<path d="M${ix1},${iy1} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} L${ix2},${iy2} A${ir},${ir} 0 0,0 ${ix1},${iy1}" fill="${fills[i%fills.length]}" stroke="${strokes[i%strokes.length]}" stroke-width="1.2"/>`;
-    h+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="16" transform="rotate(${((a1+a2)/2)*180/Math.PI+90},${tx},${ty})">${prizes[i].icon}</text>`;
+    h+=`<text x="${tx}" y="${ty}" text-anchor="middle" dominant-baseline="middle" font-size="16" transform="rotate(${((a1+a2)/2)*180/Math.PI+90},${tx},${ty})">${prizes[i].icon||'🎁'}</text>`;
   }
   h+=`<circle cx="${cx}" cy="${cy}" r="${ir}" fill="#080600" stroke="#C9A84C" stroke-width="2.5"/>
       <circle cx="${cx}" cy="${cy}" r="${ir*0.55}" fill="#C9A84C" opacity="0.9" filter="url(#wglow)"/>`;
@@ -855,10 +898,42 @@ function buildWheel() {
 }
 
 /* ───────────────────────────────
+   INIT — 景品一覧と、この端末の抽選済みステータスをサーバーから取得
+─────────────────────────────── */
+async function init() {
+  setSpinButtonState('loading');
+  try {
+    const [prizesRes, statusRes] = await Promise.all([
+      apiGet('prizes', {}),
+      apiGet('status', { deviceId: DEVICE_ID })
+    ]);
+
+    if (!prizesRes.ok) throw new Error(prizesRes.error || '景品情報の取得に失敗しました');
+    S.prizes = prizesRes.prizes;
+    buildWheel();
+    renderGrid();
+
+    if (statusRes.ok && statusRes.hasSpun) {
+      S.hasSpun = true;
+      setSpinButtonState('already');
+      // 参加済みなら、以前の結果を静かに（紙吹雪や効果音なしで）表示
+      openModal(statusRes.prize, { reviewMode: true });
+    } else if (!S.prizes.some(p => p.stock > 0)) {
+      setSpinButtonState('soldout');
+    } else {
+      setSpinButtonState('ready');
+    }
+  } catch (err) {
+    console.error(err);
+    setSpinButtonState('error');
+  }
+}
+
+/* ───────────────────────────────
    KEYBOARD & TOUCH
 ─────────────────────────────── */
 document.addEventListener('keydown', e=>{
-  if(e.code==='Space'&&!S.spinning){e.preventDefault();handleSpin();}
+  if(e.code==='Space'&&!S.spinning&&!S.hasSpun){e.preventDefault();handleSpin();}
   if((e.code==='Enter'||e.code==='Escape')&&document.getElementById('modalBg').classList.contains('open')) closeModal();
 });
 document.addEventListener('touchstart', ()=>{ unlockAudio(); document.getElementById('audioHint').classList.remove('visible'); }, {once:true});
@@ -867,9 +942,7 @@ document.addEventListener('click', unlockAudio, {once:true});
 setTimeout(()=>{ if(!S.audioOk) document.getElementById('audioHint').classList.add('visible'); }, 2000);
 
 /* ── INIT ── */
-buildWheel();
-renderGrid();
-refreshStats();
+init();
 </script>
 
 </body>
